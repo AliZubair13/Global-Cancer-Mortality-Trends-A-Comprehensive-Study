@@ -1,0 +1,1150 @@
+ {
+  // Set up the SVG canvas dimensions
+  const width = 1865;  // Further increased width
+  const height = 1500; // Further increased height
+
+  // Create an SVG element
+  const svg = d3.create("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style("background-color", "#282b30"); // light background to make it clear
+
+function showTooltip(event, text) {
+  tooltip.transition().duration(200)
+    .style("opacity", 0.9) // Make tooltip visible
+    .text(text) // Set tooltip text
+
+  // Position the tooltip based on mouse location
+  tooltip.style("left", `${event.pageX + 10}px`)
+    .style("top", `${event.pageY - 20}px`);
+}
+
+// Function to hide the tooltip
+function hideTooltip() {
+  tooltip.transition().duration(200).style("opacity", 0); // Hide the tooltip
+}
+   
+  // Append the head (vertical oval outline)
+  svg.append("ellipse")
+    .attr("cx", width / 2)        // Centered horizontally
+    .attr("cy", 460)              // Adjusted vertical position
+    .attr("rx", 140)              // Doubled horizontal radius
+    .attr("ry", 180)              // Doubled vertical radius
+    .attr("fill", "none")         // No fill inside the oval
+    .attr("stroke", "#e0ac69")       // Black outline for the head
+    .attr("stroke-width", 8);     // Increased stroke width for the head
+
+  // Append left shoulder curve
+  svg.append("path")
+    .attr("d", `M ${width / 2 - 70} 640 C ${width / 2 - 280} 720, ${width / 2 - 300} 800, ${width / 2 - 300} 900`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+  // Append right shoulder curve
+  svg.append("path")
+    .attr("d", `M ${width / 2 + 70} 640 C ${width / 2 + 280} 720, ${width / 2 + 300} 800, ${width / 2 + 300} 900`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+const tooltip = d3.select("body").append("div")
+  .attr("class", "tooltip")
+  .style("position", "absolute")
+  .style("background-color", "white")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("opacity", 0); // Initially hidden
+
+
+   
+const countryNamesTextBox = svg.append("text")
+  .attr("x", 293)           // Center horizontally
+  .attr("y", 920)                // Position text above the colon
+  .attr("text-anchor", "middle")
+  .attr("font-size", "20px")
+  .attr("fill", "white")
+  .attr("opacity", 0)             // Initially hidden
+  .text("country names");
+
+// Function to clear the highlighted countries
+function clearHighlightedCountries() {
+  for (const key in currentHighlightedCountries) {
+    delete currentHighlightedCountries[key];
+  }
+   countryNamesTextBox.attr("opacity", 0);
+}
+
+function updateCountryNamesTextBox(countriesToHighlight) {
+  const countryNamesList = countriesToHighlight.join(", "); // Join countries with commas
+  
+  countryNamesTextBox
+    .attr("opacity", 1) // Make the text box visible
+    .text(countryNamesList); // Update the text content
+}
+ 
+
+// Function to highlight countries based on organ name and show a legend
+function highlightCountriesByOrgan(organName, highlightColor = "#FF0000") {
+  clearHighlightedCountries(); // Clear previous highlights
+
+  // Fetch countries for the organ name from the totalCancerDeaths2 object
+  const countriesToHighlight = totalCancerDeaths2[organName] || [];
+
+  // Highlight the fetched countries
+  countriesToHighlight.forEach(country => {
+    currentHighlightedCountries[country] = highlightColor; // Assign the highlight color
+  });
+
+  renderGlobe(geoData, currentHighlightedCountries); // Re-render the globe
+  // updateCountryNamesTextBox(countriesToHighlight);
+
+
+}
+
+
+
+// Assuming you have a DOM element with id 'legend' to display the legend
+
+const brain = svg.append("ellipse")
+    .attr("cx", width / 2)        // Centered horizontally
+    .attr("cy", 400)              // Adjusted vertical position
+    .attr("rx", 100)              // Horizontal radius
+    .attr("ry", 50)               // Vertical radius
+    .attr("fill", "#FFB6C1")      // Light pink color for the brain
+    .attr("stroke", "#8B0000")    // Dark red outline color
+    .attr("stroke-width", 3);
+
+brain.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#FFD6E2");   // Lighter pink on hover
+    showTooltip(event, "Brain");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#FFB6C1");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+brain.on("click", function() {
+  highlightPieSlice("Brain and central nervous system cancer");
+  highlightCountriesByOrgan("Brain and central nervous system cancer","#FFB6C1");
+});
+
+
+const oralCavity = svg.append("ellipse")
+    .attr("cx", width / 2)        // Centered horizontally
+    .attr("cy", 570)              // Adjusted vertical position
+    .attr("rx", 30)               // Horizontal radius
+    .attr("ry", 15)               // Vertical radius
+    .attr("fill", "#FF6F61")      // Soft pinkish-red color for the oral cavity
+    .attr("stroke", "#8B0000")    // Dark red outline color
+    .attr("stroke-width", 3);     // Thickness of the outline
+
+oralCavity.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#FFD6E2");   // Lighter pink on hover
+    showTooltip(event, "Lip and oral cavity cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#FF6F61");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+oralCavity.on("click", function() {
+  highlightPieSlice("Lip and oral cavity cancer");
+  highlightCountriesByOrgan("Lip and oral cavity cancer","#FF6F61");
+});
+
+
+const foodPipe = svg.append("path")
+  .attr("d", `M ${width / 2} 580
+              C ${width / 2 - 30} 600, ${width / 2 - 30} 640, ${width / 2} 680
+              L ${width / 2} 1090`)  // Extended the straight line so it touches the stomach
+  .attr("fill", "none")
+  .attr("stroke", "#ffcc99") // Same color as stomach
+  .attr("stroke-width", 36);  // Increased stroke width for thickness (three times thicker)
+
+foodPipe.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("stroke", "#ffe0b3");   // Lighter color on hover
+    showTooltip(event, "Esophageal cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#ffcc99");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+foodPipe.on("click", function() {
+  highlightPieSlice("Esophageal cancer");
+  highlightCountriesByOrgan("Esophageal cancer","#ffcc99");
+});
+
+
+// Add left outline
+const leftOutline = svg.append("path")
+  .attr("d", `M ${width / 2 - 18} 580
+              C ${width / 2 - 48} 600, ${width / 2 - 48} 640, ${width / 2 - 18} 680
+              L ${width / 2 - 18} 1090`)
+  .attr("fill", "none")
+  .attr("stroke", "#cc9966") // Darker outline color
+  .attr("stroke-width", 4); // Thinner width for outline
+
+// Add right outline
+// Add right outline with mirrored curved part
+// Add right outline with properly mirrored curved part
+const rightOutline = svg.append("path")
+  .attr("d", `M ${width / 2 + 18} 580
+              C ${width / 2 - 12} 600, ${width / 2 - 12} 660, ${width / 2 + 18} 670
+              L ${width / 2 + 18} 1090`)
+  .attr("fill", "none")
+  .attr("stroke", "#cc9966") // Darker outline color
+  .attr("stroke-width", 4); // Thinner width for outline
+
+
+
+
+
+  // Append the colon (rectangle shape) below the stomach
+const colon = svg.append("rect")
+  .attr("x", width / 2 - 75)     // Center the colon horizontally
+  .attr("y", 1240)               // Position below the stomach
+  .attr("width", 150)            // Width of the colon
+  .attr("height", 100)           // Height of the colon
+  .attr("fill", "#ffd966")       // Light yellow color for colon
+  .attr("stroke", "#ccad00")     // Darker yellow outline
+  .attr("stroke-width", 4)
+  .attr("rx", 15)                // Rounded corners for colon edges
+  .attr("ry", 15)                // Rounded corners for colon edges
+  .attr("class", "colon");
+
+// Append rectum (short line) below the colon
+const rectum = svg.append("line")
+  .attr("x1", width / 2)          // Center horizontally with the colon
+  .attr("y1", 1340)               // Starting point (bottom of the colon)
+  .attr("x2", width / 2)          // End point (same x as starting)
+  .attr("y2", 1400)               // Short length extending down
+  .attr("stroke", "#ccad00")      // Match colon outline color
+  .attr("stroke-width", 8)        // Make the line thick enough to resemble the colon
+  .attr("class", "rectum");
+
+
+colon.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#ffe699");   // Lighter color on hover
+      showTooltip(event, "Colon");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#ffd966");   // Revert to original color
+
+    // Hide the tooltip
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+colon.on("click", function() {
+  highlightPieSlice("Colon and rectum cancer");
+  highlightCountriesByOrgan("Colon and rectum cancer","#ffd966");
+});
+
+const bladder = svg.append("ellipse")
+  .attr("cx", width / 2)           // Center the bladder horizontally
+  .attr("cy", 1290)                // Move the bladder higher up (adjusted y-position)
+  .attr("rx", 60)                  // Horizontal radius (make it wider)
+  .attr("ry", 40)                  // Vertical radius (make it more oval)
+  .attr("fill", "#FFFF99")         // Light yellowish color for bladder
+  .attr("stroke", "#8B8000")       // Olive green outline for a more realistic look
+  .attr("stroke-width", 4)
+  .attr("class", "bladder");
+
+bladder.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("stroke", "#FFFACD");   // Lighter color on hover
+    showTooltip(event, "Bladder cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#8B8000");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+bladder.on("click", function() {
+  highlightPieSlice("Bladder cancer");
+  highlightCountriesByOrgan("Bladder cancer","#FFFF99");
+});
+
+  
+
+
+  
+// Append the stomach – an oval shape further down
+const stomach = svg.append("ellipse")
+  .attr("cx", width / 2)       // Center horizontally
+  .attr("cy", 1150)            // Moved further down from the original position (1040 -> 1150)
+  .attr("rx", 150)             // Horizontal radius of the stomach
+  .attr("ry", 80)              // Vertical radius of the stomach
+  .attr("fill", "#ffcc99")     // Light color for stomach
+  .attr("stroke", "#cc9966")   // Slightly darker outline
+  .attr("stroke-width", 4)
+  .attr("class", "stomach");
+
+
+// Hover effect for stomach (only)
+stomach.on("mouseover", function() {
+    d3.select(this)
+      .attr("fill", "#ff9966");  // Lighter color on hover (for stomach)
+      
+    showTooltip(event, "Stomach");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#ffcc99");  // Revert to original color
+    hideTooltip();
+    
+  })
+   stomach.on("click", function() {
+  highlightPieSlice("Stomach cancer");
+  highlightCountriesByOrgan("Stomach cancer","#D2691E");
+});
+
+
+
+// Append the pancreas – an elongated, tapered shape positioned below and to the right of the stomach
+const pancreas = svg.append("path")
+  .attr("d", `M ${width / 2 - 100} 1180 
+              C ${width / 2 - 50} 1150, ${width / 2 + 150} 1150, ${width / 2 + 200} 1180
+              C ${width / 2 + 180} 1200, ${width / 2 - 80} 1190, ${width / 2 - 100} 1180`)
+  .attr("fill", "#966919")        // Light yellow-orange color for pancreas
+  .attr("stroke", "#966919")      // Slightly darker outline
+  .attr("stroke-width", 3)
+  .attr("class", "pancreas");
+
+
+
+// Hover effect for pancreas
+pancreas.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#FFD580");    // Lighter orange on hover
+    showTooltip(event, "Pancreas");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#966919");    // Revert to original color
+    hideTooltip();
+  })
+   pancreas.on("click", function() {
+  highlightPieSlice("Pancreatic cancer");
+  highlightCountriesByOrgan("Pancreatic cancer","#966919");
+});
+
+
+
+function highlightPieSlice(targetLabel) {
+  // Iterate through slices and adjust opacity
+  slices.transition().duration(300)
+    .style("opacity", d => d.data.label === targetLabel ? 1 : 0.3);
+
+  // Optionally add additional logic to reset after a timeout or user action
+}
+
+  
+  
+const thyroidGland = svg.append("rect")
+  .attr("x", width / 2 - 30)     // Align it with the starting curve of the foodpipe (centered horizontally)
+  .attr("y", 650)                // Position it below the foodpipe curve (adjusted for rectangle)
+  .attr("width", 60)             // Width of the rectangle
+  .attr("height", 36)            // Height of the rectangle
+  .attr("rx", 18)                // Horizontal radius for rounded corners
+  .attr("ry", 18)                // Vertical radius for rounded corners
+  .attr("fill", "#8B4513")       // Brown color for the thyroid
+  .attr("stroke", "#6B3E2B")     // Darker brown for outline
+  .attr("stroke-width", 2);
+
+thyroidGland.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#A0522D");   // Lighter brown on hover
+    showTooltip(event, "Thyroid cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#8B4513");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+thyroidGland.on("click", function() {
+  highlightPieSlice("Thyroid cancer");
+  highlightCountriesByOrgan("Thyroid cancer","#8B4513");
+});
+
+
+
+
+
+  
+
+
+// Append the kidneys positioned even closer to each other, slightly above, and reduced in size
+// Left kidney with hover and text
+const leftKidney = svg.append("path")
+  .attr("d", `M ${width / 2 - 30} 1300 
+              C ${width / 2 - 70} 1320, ${width / 2 - 90} 1360, ${width / 2 - 50} 1380
+              C ${width / 2 - 30} 1400, ${width / 2 - 40} 1320, ${width / 2 - 30} 1300`)
+  .attr("fill", "#9b4d4d") // Dark pinkish color for kidney
+  .attr("stroke", "#7a3a3a")
+  .attr("stroke-width", 4)
+  .attr("class", "left-kidney");
+
+// Right kidney without hover or text
+const rightKidney = svg.append("path")
+  .attr("d", `M ${width / 2 + 30} 1300 
+              C ${width / 2 + 70} 1320, ${width / 2 + 90} 1360, ${width / 2 + 50} 1380
+              C ${width / 2 + 30} 1400, ${width / 2 + 40} 1320, ${width / 2 + 30} 1300`)
+  .attr("fill", "#9b4d4d") // Dark pinkish color for kidney
+  .attr("stroke", "#7a3a3a")
+  .attr("stroke-width", 4);
+
+
+leftKidney.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("stroke", "#F4A300");   // Lighter color on hover
+    showTooltip(event, "Kidney cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#7a3a3a");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+leftKidney.on("click", function() {
+  highlightPieSlice("Kidney cancer");
+  highlightCountriesByOrgan("Kidney cancer","#9b4d4d");
+});
+
+
+  
+
+
+  
+// Append the lungs positioned further below
+const leftLung = svg.append("path")
+  .attr("d", `M ${width / 2 - 80} 800 
+              C ${width / 2 - 160} 820, ${width / 2 - 180} 940, ${width / 2 - 100} 980 
+              C ${width / 2 - 60} 1000, ${width / 2 - 80} 900, ${width / 2 - 80} 800`)
+  .attr("fill", "#d46a6a") // Dark pinkish color for lung
+  .attr("stroke", "#a14141") // Outline color
+  .attr("stroke-width", 4)
+  .attr("class", "left-lung");
+
+// Right lung without hover or text
+const rightLung = svg.append("path")
+  .attr("d", `M ${width / 2 + 80} 800 
+              C ${width / 2 + 160} 820, ${width / 2 + 180} 940, ${width / 2 + 100} 980 
+              C ${width / 2 + 60} 1020, ${width / 2 + 80} 900, ${width / 2 + 80} 800`)
+  .attr("fill", "#d46a6a") // Dark pinkish color for lung
+  .attr("stroke", "#a14141") // Outline color
+  .attr("stroke-width", 4);
+
+leftLung.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("stroke", "#ffcccc");   // Lighter color on hover
+    showTooltip(event, "Lung cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#a14141");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+leftLung.on("click", function() {
+  highlightPieSlice("Tracheal, bronchus, and lung cancer");
+  highlightCountriesByOrgan("Tracheal, bronchus, and lung cancer","#d46a6a");
+});
+
+
+
+// Append the windpipe (trachea) as a brown line, centered above the lungs
+const windpipe = svg.append("path")
+  .attr("d", `M ${width / 2} 650 Q ${width / 2} 700 ${width / 2} 750`) // Curved path for windpipe (moved up)
+  .attr("stroke", "#8B4513") // Brown color for the windpipe
+  .attr("stroke-width", 8)    // Thick enough to resemble the trachea
+  .attr("fill", "none")
+  .attr("class", "windpipe");
+
+// Append the left bronchus (branching from the windpipe to the left lung)
+const leftBronchus = svg.append("path")
+  .attr("d", `M ${width / 2} 750 Q ${width / 2 - 60} 800 ${width / 2 - 80} 880`) // Left bronchus, moved closer
+  .attr("stroke", "#8B4513")  // Same brown color for the bronchus
+  .attr("stroke-width", 6)    // Slightly thinner than the windpipe
+  .attr("fill", "none")
+  .attr("class", "leftBronchus");
+
+// Append the right bronchus (branching from the windpipe to the right lung)
+const rightBronchus = svg.append("path")
+  .attr("d", `M ${width / 2} 750 Q ${width / 2 + 60} 800 ${width / 2 + 80} 880`) // Right bronchus, moved closer
+  .attr("stroke", "#8B4513")  // Same brown color for the bronchus
+  .attr("stroke-width", 6)    // Slightly thinner than the windpipe
+  .attr("fill", "none")
+  .attr("class", "rightBronchus");
+
+
+// Hover effects for the windpipe and bronchi
+windpipe.on("mouseover", function() {
+    d3.select(this)
+      .attr("stroke", "#A0522D");  // Darker brown on hover
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#8B4513");  // Revert to original color
+  });
+
+leftBronchus.on("mouseover", function() {
+    d3.select(this)
+      .attr("stroke", "#A0522D");  // Darker brown on hover
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#8B4513");  // Revert to original color
+  });
+
+rightBronchus.on("mouseover", function() {
+    d3.select(this)
+      .attr("stroke", "#A0522D");  // Darker brown on hover
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#8B4513");  // Revert to original color
+  });
+
+
+
+
+
+
+const gallBladder = svg.append("ellipse")
+  .attr("cx", width / 2 - 100)     // Move it to the left
+  .attr("cy", 1080)                // Move it up by 80 units
+  .attr("rx", 40)                  // Reduced horizontal radius
+  .attr("ry", 60)                  // Reduced vertical radius
+  .attr("fill", "#228B22")         // Green color for the gall bladder
+  .attr("stroke", "#006400")       // Darker green for outline
+  .attr("stroke-width", 4);
+
+gallBladder.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("stroke", "#2E8B57");   // Lighter green on hover
+    showTooltip(event, "Gall Bladder cancer");
+  })
+  .on("mouseout", function() {
+    d3.select(this)
+      .attr("stroke", "#006400");   // Revert to original color
+    hideTooltip();
+  });
+
+// Click event to highlight the slice and countries
+gallBladder.on("click", function() {
+  highlightPieSlice("Gallbladder and biliary tract cancer");
+  highlightCountriesByOrgan("Gallbladder and biliary tract cancer","#228B22");
+});
+
+
+
+  
+
+
+
+// Append liver
+const liver = svg.append("path")
+  .attr("d", `M ${width / 2 - 40} 1020 
+              C ${width / 2 - 160} 1000, ${width / 2 - 200} 1080, ${width / 2 - 100} 1120
+              C ${width / 2 - 20} 1160, ${width / 2 - 60} 1060, ${width / 2 - 40} 1020`)
+  .attr("fill", "#800000") // Dark red color to resemble a liver
+  .attr("stroke", "#660000") // Slightly darker outline
+  .attr("stroke-width", 4)
+  .attr("class", "liver"); // Add a class for easy reference
+
+
+// Hover effect for liver with tooltip only
+liver.on("mouseover", function(event) {
+    d3.select(this)
+      .attr("fill", "#FF6347")  // Change to a lighter color on hover (tomato color)
+      .attr("stroke", "#FF4500");  // Change the stroke to a bright color on hover
+
+showTooltip(event, "Liver Cancer");
+
+    // Position the tooltip based on mouse location
+    tooltip.style("left", `${event.pageX + 10}px`)
+      .style("top", `${event.pageY - 20}px`);
+})
+.on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#800000")  // Revert to original color
+      .attr("stroke", "#660000");  // Revert to original stroke
+   hideTooltip();
+})
+.on("click", function() {
+    highlightPieSlice("Liver cancer");
+    highlightCountriesByOrgan("Liver cancer","#800000");
+});
+
+
+
+   
+
+  
+  // Append left lower arm line
+  svg.append("path")
+    .attr("d", `M ${width / 2 - 300} 900 L ${width / 2 - 350} 1180`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+  // Append right lower arm line
+  svg.append("path")
+    .attr("d", `M ${width / 2 + 300} 900 L ${width / 2 + 350} 1180`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+  // Append left lower arm parallel line
+  svg.append("path")
+    .attr("d", `M ${width / 2 - 200} 910 L ${width / 2 - 270} 1220`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+  // Append right lower arm parallel line
+  svg.append("path")
+    .attr("d", `M ${width / 2 + 200} 910 L ${width / 2 + 270} 1220`)
+    .attr("fill", "none")
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+
+   // Append left body line (straight line)
+svg.append("line")
+    .attr("x1", width / 2 - 200)
+    .attr("y1", 880)
+    .attr("x2", width / 2 - 200)
+    .attr("y2", 1480)
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+// Append right body line (straight line)
+svg.append("line")
+    .attr("x1", width / 2 + 200)
+    .attr("y1", 880)
+    .attr("x2", width / 2 + 200)
+    .attr("y2", 1480)
+    .attr("stroke", "#e0ac69")
+    .attr("stroke-width", 8);
+
+  // // Append left body line
+  // svg.append("path")
+  //   .attr("d", `M ${width / 2 - 200} 880 C ${width / 2 - 200} 1000, ${width / 2 - 200} 1200, ${width / 2 - 200} 1280 L ${width / 2 - 280} 1920`)
+  //   .attr("fill", "none")
+  //   .attr("stroke", "#000")
+  //   .attr("stroke-width", 8);
+
+  // // Append right body line
+  // svg.append("path")
+  //   .attr("d", `M ${width / 2 + 200} 880 C ${width / 2 + 200} 1000, ${width / 2 + 200} 1200, ${width / 2 + 200} 1280 L ${width / 2 + 280} 1920`)
+  //   .attr("fill", "none")
+  //   .attr("stroke", "#000")
+  //   .attr("stroke-width", 8);
+
+  // // Append inverted "V" shape pointing upwards between the legs
+  // svg.append("path")
+  //   .attr("d", `M ${width / 2 - 120} 1900 L ${width / 2} 1500 L ${width / 2 + 120} 1900`)
+  //   .attr("fill", "none")
+  //   .attr("stroke", "#000")
+  //   .attr("stroke-width", 8);
+// Prepare data: `totalCancerDeaths` should be available
+
+
+  const tooltip2 = d3.select("body").append("div")
+  .attr("class", "tooltip")
+  .style("position", "absolute")
+  .style("opacity", 0)
+  .attr("class", "tooltip")
+  .style("position", "absolute")
+  .style("background-color", "white")
+  .style("border", "1px solid #ccc")
+  .style("padding", "5px")
+  .style("border-radius", "5px");
+
+   
+  const data = Object.entries(totalCancerDeaths).map(([organ, deaths]) => ({
+    label: organ,
+    value: deaths
+  }));
+
+  // Set up dimensions for the pie chart and legend
+  const pieWidth = 400;
+  const pieHeight = 400;
+  const radius = Math.min(pieWidth, pieHeight) / 2;
+
+// const pieBackground = svg.append("g")
+//   .attr("transform", `translate(${pieWidth / 2 + 100}, ${pieHeight / 2 + 350})`) // Same translation as pie chart
+
+
+// // Add a white background box behind the pie chart
+// pieBackground.append("rect")
+//   .attr("x", -radius - 20)  // Adjust to cover the entire chart
+//   .attr("y", -radius - 20)  // Adjust to cover the entire chart
+//   .attr("width", radius * 2 + 40) // Add padding around the pie chart
+//   .attr("height", radius * 2 + 40) // Add padding around the pie chart
+//   .attr("fill", "white") // Set the background color
+//   .attr("stroke", "#ccc") // Optional: Add a border to the box
+//   .attr("stroke-width", 2)
+//      .attr("filter", "url(#shadow)") // Apply the shadow filter
+
+
+  // Create a group for the pie chart
+  const pieChartGroup = svg.append("g")
+     .attr("transform", `translate(${pieWidth / 2 + 100}, ${pieHeight / 2 + 280})`)
+
+  const customColors = [
+  "#800000", // Light Pink
+  "#9b4d4d", // Sky Blue
+  "#FF6F61", // Gold
+  "#d46a6a", // Lime Green
+  "#228B22", // Orange Red
+  "#8B4513", // Slate Blue
+  "#D2691E", // Chocolate
+  "#FFFF99", // Turquoise
+  "#FFB6C1", // Tomato
+  "#966919", // Steel Blue
+  "#ffcc99", // Violet
+  "#ffd966"  // Dark Red
+];
+
+  // Define color scale
+const color = d3.scaleOrdinal().range(customColors);
+  // Define pie and arc generators
+  const pie = d3.pie()
+    .value(d => d.value)
+    .sort(null);
+
+  const arc = d3.arc()
+    .innerRadius(0) // Full pie (no donut hole)
+    .outerRadius(radius);
+
+  const arcHover = d3.arc()
+    .innerRadius(0)
+    .outerRadius(radius + 10); // Slightly larger radius for hover effect
+
+// Calculate the total value for all slices
+const totalValue = d3.sum(data, d => d.value);
+
+const slices = pieChartGroup.selectAll(".slice")
+    .data(pie(data))
+    .enter()
+    .append("path")
+    .attr("class", "slice")
+    .attr("d", arc)
+    .attr("fill", d => color(d.data.label))
+    .attr("stroke", "black")
+    .attr("stroke-width", 1)
+    .on("mouseover", function (event, d) {
+        // Enlarge slice on hover
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("d", arcHover);
+
+        // Calculate percentage for the current slice
+        const percentage = ((d.data.value / totalValue) * 100).toFixed(1); // 1 decimal place
+
+        // Show tooltip on hover with the deaths value and percentage
+        tooltip2.style("opacity", 0.9)
+          .text(`${d.data.label}: ${d.data.value} deaths (${percentage}%)`)
+          .style("left", `${event.pageX + 5}px`) // Position tooltip slightly to the right of the mouse
+          .style("top", `${event.pageY + 5}px`); // Position tooltip slightly below the mouse
+    })
+    .on("mouseout", function (event, d) {
+        // Reset slice size on mouse out
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("d", arc);
+
+        // Hide tooltip on mouse out
+        tooltip2.style("opacity", 0);
+    });
+
+  // Create a legend
+  const legend = svg.append("g")
+    .attr("transform", `translate(${pieWidth +120}, 350)`); // Position legend to the right
+
+  const legendItemHeight = 20;
+
+  data.forEach((d, i) => {
+    // Add legend color box
+legend.append("circle")
+  .attr("cx", 7.5) // Center X coordinate for the circle
+  .attr("cy", i * legendItemHeight + 7.5) // Center Y coordinate for the circle
+  .attr("r", 7.5) // Radius of the circle
+  .attr("fill", color(d.label)); // Set the color of the circle
+
+
+    // Add legend text
+    legend.append("text")
+      .attr("x", 20)
+      .attr("y", i * legendItemHeight + 12) // Adjust to align with rectangles
+      .attr("font-size", "12px")
+      .attr("fill","white")
+      .text(d.label);
+  });
+
+  // Add title to the pie chart
+  svg.append("text")
+    .attr("x", pieWidth / 2)
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "20px")
+    .attr("fill", "#000")
+    .text("Total Cancer Deaths by Organ");
+
+
+
+
+const globeWidth = 500;
+const globeHeight = 500;
+
+// Create a canvas for the globe
+const globeCanvas = DOM.context2d(globeWidth, globeHeight);
+const globeProjection = d3.geoOrthographic()
+  .scale(200)
+  .translate([globeWidth / 2, globeHeight / 2]);
+const globePath = d3.geoPath(globeProjection, globeCanvas);
+const  currentHighlightedCountries = {};
+
+// Function to render the globe
+// Create a tooltip element (to be added outside this function)
+// Function to adjust the color intensity of the given color
+// Function to adjust the color intensity of the given color
+// Function to adjust color intensity
+function adjustColorIntensity(color, factor) {
+  // Convert the color from hex to RGB
+  let r = parseInt(color.slice(1, 3), 16);
+  let g = parseInt(color.slice(3, 5), 16);
+  let b = parseInt(color.slice(5, 7), 16);
+
+  // Reduce the intensity of each color component based on the factor
+  r = Math.floor(r * factor);
+  g = Math.floor(g * factor);
+  b = Math.floor(b * factor);
+
+  // Ensure the values stay within the valid range [0, 255]
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+
+  // Convert the RGB values back to a hex color string
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// Modified renderGlobe function
+// Modified renderGlobe function
+// Modified renderGlobe function
+function renderGlobe(data, currentHighlightedCountries = {}) {
+  // Clear the canvas
+  globeCanvas.clearRect(0, 0, globeWidth, globeHeight);
+
+  // Draw the background (sphere)
+  globeCanvas.beginPath();
+  globePath({ type: "Sphere" });
+  globeCanvas.fillStyle = "#D5FFFF"; // Light blue for water
+  globeCanvas.fill();
+
+  // Track highlighted countries' colors and their order
+  let highlightedCountriesList = [];
+  let highlightedColors = [];
+
+  // First, iterate through the highlighted countries and apply intensity
+  const highlightedCountriesKeys = Object.keys(currentHighlightedCountries);
+
+  highlightedCountriesKeys.forEach((countryName, index) => {
+    const feature = data.features.find(f => f.properties.NAME === countryName);
+    if (feature) {
+      globeCanvas.beginPath();
+      globePath(feature);
+
+      const highlightedColor = currentHighlightedCountries[countryName];
+
+      // Reverse the intensity factor so that the first country has less intensity
+const intensityFactor = index === 0 ? 0.1 : index / (highlightedCountriesKeys.length - 1); 
+      const adjustedColor = adjustColorIntensity(highlightedColor, intensityFactor);
+
+      globeCanvas.fillStyle = adjustedColor; // Apply the reduced intensity color
+      globeCanvas.fill();
+
+      // Store the color and country for the legend
+      highlightedCountriesList.push(countryName);
+      highlightedColors.push(highlightedColor);
+    }
+  });
+
+  // Then, iterate through the rest of the countries (those not in currentHighlightedCountries)
+  data.features.forEach(feature => {
+    const countryName = feature.properties.NAME;
+    if (!currentHighlightedCountries[countryName]) {
+      globeCanvas.beginPath();
+      globePath(feature);
+      globeCanvas.fillStyle = "#66C266"; // Green color for non-highlighted countries
+      globeCanvas.fill();
+    }
+  });
+
+  // Draw the outline of the sphere
+  globeCanvas.beginPath();
+  globePath({ type: "Sphere" });
+  globeCanvas.stroke();
+
+  // Call the function to render the intensity legend for the highlighted countries
+  renderIntensityLegend(highlightedCountriesList, highlightedColors);
+}
+
+function renderIntensityLegend(highlightedCountriesList, highlightedColors) {
+  const legendRadius = 12;  // Radius of each circle
+  const legendSpacing = 92;  // Horizontal space between circles
+  const legendStartX = 50;  // X position for the legend's first circle
+  const legendStartY = 20;  // Y position for the legend
+
+  // If there are no highlighted countries, do not display the legend
+  if (highlightedColors.length === 0) return;
+
+  // Create an array of colors based on intensity from light to dark
+  let legendColors = [];
+
+  // For each highlighted country, apply intensity reduction based on order
+  highlightedColors.forEach((color, index) => {
+    // Reverse order: the first country should have the least intensity
+    const factor = (highlightedColors.length - 1 - index) * (1 / (highlightedColors.length - 1));  // Adjust intensity
+    const adjustedColor = adjustColorIntensity(color, factor); // Apply intensity based on order
+    legendColors.push(adjustedColor);  // Store adjusted color
+  });
+
+  // Reverse the order of both the country list and color list for the circles
+  legendColors = legendColors.reverse();
+
+  // Draw circles for each highlighted country with adjusted intensity
+  legendColors.forEach((color, index) => {
+    // Draw circle with the adjusted color and white border
+    globeCanvas.beginPath();
+    globeCanvas.arc(
+      legendStartX + index * legendSpacing,  // X position of the circle
+      legendStartY,                         // Y position of the circle
+      legendRadius,                         // Radius of the circle
+      0,                                    // Start angle (0 radians)
+      Math.PI * 2                           // End angle (2 radians for full circle)
+    );
+    globeCanvas.fillStyle = color;          // Circle fill color (based on intensity)
+    globeCanvas.fill();
+    globeCanvas.lineWidth = 1;              // Line width for border
+    globeCanvas.strokeStyle = "#FFFFFF";    // White border color
+    globeCanvas.stroke();                   // Apply the stroke to draw the border
+    globeCanvas.closePath();
+  });
+
+ 
+
+  // Draw the country names next to each circle (reversed order for text)
+  globeCanvas.fillStyle = "white";  // Text color
+  globeCanvas.font = "16px Arial";
+  highlightedCountriesList.forEach((country, index) => {
+        if (country === "United States of America") {
+      country = "USA";  // Convert to "USA"
+    }
+    globeCanvas.fillText(
+      country,  // Text to display (country name)
+      legendStartX + index * legendSpacing + legendRadius + 5, // X position (next to circle)
+      legendStartY + 5                         // Y position (slightly below the circle)
+    );
+  });
+}
+
+
+
+
+
+
+
+
+
+renderGlobe(geoData, currentHighlightedCountries);
+
+
+function drag(projection) {
+  let v0, q0, r0, a0, l;
+
+  function pointer(event, element) {
+    const t = d3.pointers(event, element);
+
+    if (t.length !== l) {
+      l = t.length;
+      if (l > 1) a0 = Math.atan2(t[1][1] - t[0][1], t[1][0] - t[0][0]);
+      dragstarted.apply(element, [event]);
+    }
+
+    // For multitouch, average positions and compute rotation.
+    if (l > 1) {
+      const x = d3.mean(t, p => p[0]);
+      const y = d3.mean(t, p => p[1]);
+      const a = Math.atan2(t[1][1] - t[0][1], t[1][0] - t[0][0]);
+      return [x, y, a];
+    }
+
+    return t[0];
+  }
+
+  function dragstarted(event) {
+    const coords = pointer(event, this);
+    v0 = versor.cartesian(projection.invert(coords));
+    q0 = versor(r0 = projection.rotate());
+  }
+
+  function dragged(event) {
+    const coords = pointer(event, this);
+    const v1 = versor.cartesian(projection.rotate(r0).invert(coords));
+    const delta = versor.delta(v0, v1);
+    let q1 = versor.multiply(q0, delta);
+
+    // Handle multitouch rotation.
+    const p = pointer(event, this);
+    if (p[2]) {
+      const d = (p[2] - a0) / 2;
+      const s = -Math.sin(d);
+      const c = Math.sign(Math.cos(d));
+      q1 = versor.multiply([Math.sqrt(1 - s * s), 0, 0, c * s], q1);
+    }
+
+    projection.rotate(versor.rotation(q1));
+
+    // Restart dragging logic near the antipode.
+    if (delta[0] < 0.7) dragstarted(event);
+
+    // Re-render the globe.
+    renderGlobe(geoData, currentHighlightedCountries);
+  }
+
+  return d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged);
+}
+
+// Ensure proper attachment of the drag behavior to the canvas
+d3.select(globeCanvas.canvas)
+  .call(drag(globeProjection));
+
+// Initial render of the globe
+// renderGlobe(geoData, highlightedCountries);
+
+
+
+// Append the globe canvas to the SVG
+svg.append("foreignObject")
+  .attr("width", globeWidth)
+  .attr("height", globeHeight)
+  .attr("x", 50) // Position within the SVG
+  .attr("y", 900) // Position within the SVG
+  .append(() => globeCanvas.canvas);
+
+
+// svg.insert("rect", ":first-child") // Add the rect as the first child of the SVG
+//   .attr("x", 40) // Add padding around the globe
+//   .attr("y", 890) // Add padding around the globe
+//   .attr("width", globeWidth) // Account for padding
+//   .attr("height", globeHeight) // Account for padding
+//   .attr("fill", "white") // Set the background color
+//   .attr("stroke", "#ccc") // Optional: Add a border color
+//   .attr("stroke-width", 2)
+//         .attr("filter", "url(#shadow)") // Apply the shadow filter
+
+
+// const shadowFilter = svg.append("defs")
+//   .append("filter")
+//   .attr("id", "shadow")
+//   .attr("x", "-50%") // Expand filter region to accommodate shadow
+//   .attr("y", "-50%")
+//   .attr("width", "200%")
+//   .attr("height", "200%");
+
+// // Define the shadow effect
+// shadowFilter.append("feDropShadow")
+//   .attr("dx", 5)  // Horizontal shadow offset
+//   .attr("dy", 5)  // Vertical shadow offset
+//   .attr("stdDeviation", 5) // Blur radius
+//   .attr("flood-color", "rgba(0, 0, 0, 0.2)"); // Shadow color
+
+// // Add a rect with shadow and rounded corners
+// svg.insert("rect", ":first-child") // Add the rect as the first child of the SVG
+//   .attr("x", 573) // Add padding around the globe
+//   .attr("y", 220) // Add padding around the globe
+//   .attr("width", 720) // Account for padding
+//   .attr("height", 1300) // Account for padding
+//   .attr("fill", "white") // Set the background color
+//   .attr("stroke", "#ccc") // Add a border color
+//   .attr("stroke-width", 2) // Thickness of the border
+  
+//   .attr("filter", "url(#shadow)"); // Apply the shadow filter
+
+   
+
+// Add other visualizations or elements to the same SVG as needed
+svg.append("text")
+  .attr("x", width / 2)
+  .attr("y", 230)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "28px")
+  .attr("fill", "white")
+  .text("Interactive Anatomy Map");
+
+svg.append("text")
+  .attr("x", 300)
+  .attr("y", 230)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "28px")
+  .attr("fill", "white")
+  .text("Organ-Specific Cancer Mortality");
+
+
+svg.append("text")
+  .attr("x", 300)
+  .attr("y", 870)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "28px")
+  .attr("fill", "white")
+  .text("Top 5 Cancer Hotspots Globally");
+
+
+   
+svg.append("text")
+  .attr("x", 650)
+  .attr("y", 120)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "44px")
+  .attr("fill", "white")
+   .attr("font-weight", "bold")
+  .text("The Anatomy of Cancer: Organ-Specific Insights");
+
+
+   
+   
+
+  return svg.node();
+}
+
+
+
