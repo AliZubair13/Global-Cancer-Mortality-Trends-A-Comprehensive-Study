@@ -3,6 +3,9 @@ I’ve built an Interactive Global-Cancer-Mortality-Trends Dashboard using D3.js
 
 Observable Notebook: [https://lnkd.in/g7cKSnxP](https://observablehq.com/d/a18dc7572663de59)
 
+![image](https://github.com/user-attachments/assets/7a1fc5d3-8e9e-4021-9778-a283658768b7)
+
+
 What does it do?
 Visualizes the impact of cancer across vital human organs.
 🥧 Displays organ-specific cancer cases in a pie chart, including their contribution percentages.
