@@ -1,0 +1,186 @@
+combinedVis = {
+  const height = 450;
+  const width = 500;
+  const radius = Math.min(width, height) / 2.5;
+
+  const svg = d3.create("svg")
+    .attr("viewBox", `0 0 ${width * 2 + 400} ${height + 60}`)
+    .attr("width", width * 2.1 + 220)
+    .attr("height", height + 100)
+    .style("background-color", "black");
+
+  svg.append("text")
+    .attr("x", width / 1.80)
+    .attr("y", -25)
+    .style("text-anchor", "middle")
+    .style("font-size", "20px")
+    .style("fill", "white")
+    .text("Mortality Trends for Top 5 Curable Cancers (1990-2019)");
+
+  svg.append("text")
+    .attr("x", width + width / 1.60)
+    .attr("y", -25)
+    .style("text-anchor", "middle")
+    .style("font-size", "20px")
+    .style("fill", "white")
+    .text("Death Trends in Top 5 Chronic Cancers (1990-2019)");
+
+  const curableGroup = svg.append("g")
+    .attr("transform", `translate(${width / 2}, ${height / 2 + 50})`);
+
+  const chronicGroup = svg.append("g")
+    .attr("transform", `translate(${width + width / 2}, ${height / 2 + 50})`);
+
+  const curableColor = d3.scaleOrdinal()
+    .domain(["Prostate cancer", "Thyroid cancer", "Testicular cancer", "Melanoma", "Breast cancer"])
+    .range(["red", "yellow", "green", "blue", "orange"]);
+
+  const chronicColor = d3.scaleOrdinal()
+    .domain(["Liver cancer", "Pancreatic cancer", "Lung cancer", "Brain and central nervous system cancer", "Esophageal cancer"])
+    .range(["red", "yellow", "green", "blue", "orange"]);
+
+  const pie = d3.pie()
+    .value(d => d.value)
+    .sort(null);
+
+  const arc = d3.arc()
+    .innerRadius(0)
+    .outerRadius(radius);
+
+  const zoomArc = d3.arc()
+    .innerRadius(0)
+    .outerRadius(radius * 1.2);
+
+  const getCurableYearData = year => {
+    const filtered = Cancer.filter(d => d.Year === String(year));
+    return [
+      { type: "Prostate cancer", value: d3.sum(filtered, d => d["Deaths - Prostate cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Thyroid cancer", value: d3.sum(filtered, d => d["Deaths - Thyroid cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Testicular cancer", value: d3.sum(filtered, d => d["Deaths - Testicular cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Melanoma", value: d3.sum(filtered, d => d["Deaths - Malignant skin melanoma - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Breast cancer", value: d3.sum(filtered, d => d["Deaths - Breast cancer - Sex: Both - Age: All Ages (Number)"]) }
+    ];
+  };
+
+  const getChronicYearData = year => {
+    const filtered = Cancer.filter(d => d.Year === String(year));
+    return [
+      { type: "Liver cancer", value: d3.sum(filtered, d => d["Deaths - Liver cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Pancreatic cancer", value: d3.sum(filtered, d => d["Deaths - Pancreatic cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Lung cancer", value: d3.sum(filtered, d => d["Deaths - Tracheal, bronchus, and lung cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Brain and central nervous system cancer", value: d3.sum(filtered, d => d["Deaths - Brain and central nervous system cancer - Sex: Both - Age: All Ages (Number)"]) },
+      { type: "Esophageal cancer", value: d3.sum(filtered, d => d["Deaths - Esophageal cancer - Sex: Both - Age: All Ages (Number)"]) }
+    ];
+  };
+
+  function updateCurable(year) {
+    const data = getCurableYearData(year);
+    const paths = curableGroup.selectAll("path").data(pie(data), d => d.data.type);
+
+    paths.enter()
+      .append("path")
+      .attr("d", arc)
+      .attr("fill", d => curableColor(d.data.type))
+      .on("mouseover", function (event, d) {
+        d3.select(this).transition().duration(200).attr("d", zoomArc);
+        tooltip.style("visibility", "visible").html(`${d.data.type}: ${d.data.value.toLocaleString()}`);
+      })
+      .on("mousemove", event => {
+        tooltip.style("top", `${event.pageY - 20}px`).style("left", `${event.pageX + 10}px`);
+      })
+      .on("mouseout", function () {
+        d3.select(this).transition().duration(200).attr("d", arc);
+        tooltip.style("visibility", "hidden");
+      })
+      .merge(paths)
+      .transition()
+      .duration(300)
+      .attr("d", arc);
+
+    paths.exit().remove();
+  }
+
+  function updateChronic(year) {
+    const data = getChronicYearData(year);
+    const paths = chronicGroup.selectAll("path").data(pie(data), d => d.data.type);
+
+    paths.enter()
+      .append("path")
+      .attr("d", arc)
+      .attr("fill", d => chronicColor(d.data.type))
+      .on("mouseover", function (event, d) {
+        d3.select(this).transition().duration(200).attr("d", zoomArc);
+        tooltip.style("visibility", "visible").html(`${d.data.type}: ${d.data.value.toLocaleString()}`);
+      })
+      .on("mousemove", event => {
+        tooltip.style("top", `${event.pageY - 20}px`).style("left", `${event.pageX + 10}px`);
+      })
+      .on("mouseout", function () {
+        d3.select(this).transition().duration(200).attr("d", arc);
+        tooltip.style("visibility", "hidden");
+      })
+      .merge(paths)
+      .transition()
+      .duration(300)
+      .attr("d", arc);
+
+    paths.exit().remove();
+  }
+
+  const tooltip = d3.select("body").append("div")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "rgba(255, 255, 255, 0.9)")
+    .style("border", "1px solid #ccc")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("font-size", "12px")
+    .style("pointer-events", "none");
+
+  updateCurable(selectedYear);
+  updateChronic(selectedYear);
+
+  const addLegend = (group, data, xOffset) => {
+    const legendGroup = svg.append("g").attr("transform", `translate(${xOffset}, ${20})`);
+    legendGroup.selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", (d, i) => i * 25)
+      .attr("width", 15)
+      .attr("height", 15)
+      .attr("fill", d => d.color);
+
+    legendGroup.selectAll("text")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("x", 20)
+      .attr("y", (d, i) => i * 25 + 12)
+      .style("font-size", "12px")
+      .style("fill", "white")
+      .text(d => d.label);
+  };
+
+  const curableLegendData = [
+    { label: "Prostate cancer", color: "red" },
+    { label: "Thyroid cancer", color: "yellow" },
+    { label: "Testicular cancer", color: "green" },
+    { label: "Melanoma", color: "blue" },
+    { label: "Breast cancer", color: "orange" }
+  ];
+
+  const chronicLegendData = [
+    { label: "Liver cancer", color: "red" },
+    { label: "Pancreatic cancer", color: "yellow" },
+    { label: "Lung cancer", color: "green" },
+    { label: "Brain and CNS cancer", color: "blue" },
+    { label: "Esophageal cancer", color: "orange" }
+  ];
+
+  addLegend(svg, curableLegendData, 400);
+  addLegend(svg, chronicLegendData, width + 400);
+
+  return svg.node();
+}
