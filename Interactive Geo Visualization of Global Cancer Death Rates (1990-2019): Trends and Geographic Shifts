@@ -1,0 +1,145 @@
+ chart = {
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, 960, 550]) // Slightly increased height for spacing
+    .style("width", "100%")
+    .style("height", "auto")
+    .style("background-color", "#000"); // Dark ink blue sea background
+
+  const g = svg.append("g")
+    .attr("transform", "translate(0, 40)"); // Adjust map downwards for spacing
+
+  // Map title
+  svg.append("text")
+    .attr("x", 480) // Centered
+    .attr("y", 20) // Positioned above the map
+    .attr("text-anchor", "middle")
+    .attr("font-size", "28px") // Slightly larger
+    .attr("font-weight", "bold") // Bold title
+    .attr("fill", "white")
+    .text("Global Cancer Death Rate (1990-2019)");
+
+  // Filter out Antarctica
+  const filteredFeatures = geoData.features.filter(d => d.properties.ADMIN !== "Antarctica");
+
+  // Draw map paths
+  g.selectAll("path")
+    .data(filteredFeatures)
+    .join("path")
+    .attr("d", path)
+    .attr("fill", "lightgray")
+    .attr("stroke", "grey") // Black borders for better visibility
+    .attr("stroke-width", 0.5) // Thin border for a clean look
+    .attr("stroke-linejoin", "round"); // Rounded corners for smoothness
+
+  // Tooltip setup
+  const tooltip = d3.select("body").append("div")
+    .style("position", "absolute")
+    .style("background", "#f8f9fa") // Light background for better contrast
+    .style("color", "#333") // Dark text for readability
+    .style("padding", "8px")
+    .style("border-radius", "6px")
+    .style("border", "1px solid #ddd")
+    .style("box-shadow", "0px 4px 8px rgba(0, 0, 0, 0.2)")
+    .style("visibility", "hidden");
+
+  // Update function for colors and tooltips
+  function update(year) {
+    g.selectAll("path")
+      .attr("fill", d => {
+        const countryData = processedData.find(c => c.code === d.properties.ISO_A3);
+        return countryData ? colorScale(countryData.years[year] || 0) : "#dcdcdc"; // Neutral gray for no data
+      })
+      .on("mouseover", (event, d) => {
+        const countryName = d.properties.ADMIN; // Use direct country name from geoData
+        const countryData = processedData.find(c => c.code === d.properties.ISO_A3);
+        const value = countryData ? countryData.years[year] || "No data" : "No data";
+
+        tooltip
+          .html(`<strong>Country:</strong> ${countryName}<br>
+                 <strong>Year:</strong> ${year}<br>
+                 <strong>Cancer Death Rate:</strong> ${value}`)
+          .style("visibility", "visible");
+      })
+      .on("mousemove", event => {
+        tooltip
+          .style("top", `${event.pageY + 15}px`)
+          .style("left", `${event.pageX + 15}px`);
+      })
+      .on("mouseout", () => {
+        tooltip.style("visibility", "hidden");
+      });
+  }
+
+  // Year range for scrubber
+  const yearRange = d3.range(1990, 2020);
+
+  // Create scrubber for interactivity
+  const scrubber = Scrubber(yearRange, {
+    format: d => d,
+    delay: 250,
+    loop: false
+  });
+
+  scrubber.addEventListener("input", () => update(scrubber.value));
+  update(1990); // Initial setup
+// Add legend
+const legendWidth = 300;
+const legendHeight = 20;
+const legendMargin = { top: 10, right: 20, bottom: 20, left: 20 };
+
+const legend = svg.append("g")
+  .attr("transform", `translate(${(960 - legendWidth) / 2}, ${520 - legendHeight - legendMargin.bottom})`);
+
+// Calculate min and max values from the data
+const minValue = d3.min(processedData, d => d3.min(Object.values(d.years)));
+const maxValue = d3.max(processedData, d => d3.max(Object.values(d.years)));
+
+const legendScale = d3.scaleLinear()
+  .domain([minValue, maxValue])
+  .range([0, legendWidth]);
+
+// Create custom tick values
+const tickValues = [0, maxValue / 4, maxValue / 2, (3 * maxValue) / 4, maxValue];
+
+const legendAxis = d3.axisBottom(legendScale)
+  .tickValues(tickValues)
+  .tickFormat(d => `${Math.round(d / 1000000)}M`);
+
+legend.append("g")
+  .attr("transform", `translate(0, ${legendHeight})`)
+  .call(legendAxis)
+  .attr("font-size", "10px")
+  .selectAll("text")
+  .attr("fill", "white"); // Set label color to white
+
+const legendGradient = legend.append("defs")
+  .append("linearGradient")
+  .attr("id", "legend-gradient")
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "100%")
+  .attr("y2", "0%");
+
+legendGradient.selectAll("stop")
+  .data(d3.range(0, 1.1, 0.25).map(t => ({ 
+    offset: `${t * 100}%`, 
+    color: colorScale(minValue + t * (maxValue - minValue)) 
+  })))
+  .enter().append("stop")
+  .attr("offset", d => d.offset)
+  .attr("stop-color", d => d.color);
+
+legend.append("rect")
+  .attr("width", legendWidth)
+  .attr("height", legendHeight)
+  .style("fill", "url(#legend-gradient)");
+
+legend.append("text")
+  .attr("x", legendWidth / 2)
+  .attr("y", -5)
+  .attr("text-anchor", "middle")
+  .attr("fill", "white") // Ensure title is also white
+  .text("Cancer Death Rate");
+  // Return the SVG node and scrubber for display
+  return Object.assign(svg.node(), { scrubber });
+};
