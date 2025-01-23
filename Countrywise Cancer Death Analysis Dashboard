@@ -1,0 +1,32 @@
+dashboard = {
+  const container = d3.create("div");
+  container.html(`
+    <div id="dashboard" style="width: 1150px; height: 800px; background-color: #000000; color: #ffffff; font-family: Arial, sans-serif; padding: 20px; box-sizing: border-box;">
+    <center>  <h1 style="text-align: center; margin-bottom: 20px;color:white">Countrywise Cancer Death Analysis</h1></center>
+      
+      <div style="display: flex; justify-content: space-between;">
+        <div style="width: 530px;">
+          <div id="dropdown-container" style="margin-bottom: 20px;"></div>
+          <div id="chart9-container" style="width: 500px; height: 70px; margin-bottom: 20px;"></div>
+          <div id="chart3-container" style="width: 500px; height: 90px;"></div>
+        </div>
+        
+        <div style="width: 530px;">
+          <div id="chart6-container" style="width: 530px; height: 400px; margin-bottom: 20px;"></div>
+          <div id="barchart-container" style="width: 530px; height: 300px;"></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Append the dropdown to its container
+  container.select("#dropdown-container").append(() => dropdown);
+
+  // Append charts to their respective containers
+  container.select("#chart9-container").append(() => chart9);
+  container.select("#chart3-container").append(() => chart3);
+  container.select("#chart6-container").append(() => chart6);
+  container.select("#barchart-container").append(() => Barchart);
+
+  return container.node();
+}
