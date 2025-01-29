@@ -7,7 +7,6 @@ Observable Notebook: [https://lnkd.in/g7cKSnxP](https://observablehq.com/d/a18dc
 
 The Anatomy of Cancer: Organ-Specific Insights Dashboard
 
-https://github.com/user-attachments/assets/b902968e-f661-4c77-98b1-d33663c82f54
 
 
 
